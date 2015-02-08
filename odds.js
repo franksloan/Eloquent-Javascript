@@ -60,10 +60,12 @@ var Team = function(form, players, home) {
 	var team = this;
 	//function to work out the rating for each player group
 	var positionRating = function(position) {
+		console.log(position);
 		var playerGroup = team.players[position];
 		var rating = 0;
 		var average = 0;
-		var forOrAgainst = (position == ('attackers' || 'midfielders')) ? 'goalsFor' : 'goalsAgainst';
+		var forOrAgainst = ((position === 'attackers') || (position === 'midfielders')) ? 'goalsFor' : 'goalsAgainst';
+		console.log(forOrAgainst);
 		var goalsPerGame = team.form[forOrAgainst]/
 			(team.form.homeGames + team.form.awayGames);
 		for(var player in playerGroup) {
@@ -72,19 +74,9 @@ var Team = function(form, players, home) {
 		average = rating/playerGroup.length;
 		return average * goalsPerGame;
 	};
-	this.defence2 = function() {
-		var defenders = this.players.defenders;
-		var rating = 0;
-		var average = 0;
-		var goalsPerGame = this.form.goalsAgainst/
-			(this.form.homeGames + this.form.awayGames);
-		for(var defender in defenders) {
-			rating += defenders[defender].rating;
-		};
-		average = rating/defenders.length;
-		return average * goalsPerGame;
-	};
+	this.goal = positionRating('goalkeeper');
 	this.defence = positionRating('defenders');
+	this.midfield = positionRating('midfielders');
 	this.attack = positionRating('attackers');
 };
 
