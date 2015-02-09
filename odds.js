@@ -80,9 +80,6 @@ var Team = function(form, players, home) {
 	this.attack = positionRating('attackers');
 };
 
-var aTeam = new Team(aForm, "Hi", true);
-var bTeam = new Team(bForm, "Hi", false);
-
 var equal = true;
 var deepEqual = function(arg1, arg2){
 	if (arg1 === arg2) {
@@ -107,6 +104,47 @@ var deepEqual = function(arg1, arg2){
 		return equal;
 	}
 	return equal;
+};
+
+var decimalToFraction = function(input) {
+	var wholeNum = Math.floor(input);
+	var decimals = input - wholeNum;
+	var denominator = 1000;
+	var numerator = Math.floor(decimals * denominator);
+	for(var i = numerator + 1; i > 1; i--) {
+		console.log(i);
+		if ((numerator % i === 0) && (denominator % i === 0)) {
+			numerator = numerator/i;
+			denominator = denominator/i;
+			i = numerator;
+			console.log(numerator);
+			console.log(denominator);
+		};
+	}
+	var numerator = numerator + (wholeNum * denominator);
+	console.log(numerator.toString() + '/' + denominator.toString());
+};
+
+var decimalToFraction = function(input) {
+	var wholeNum = Math.floor(input);
+	var decimals = input - wholeNum;
+	var denominator = 1000;
+	//numerator as whole number
+	var numerator = Math.round(decimals * denominator);
+	for(var i = 2; i <= numerator; i++) {
+		console.log(i);
+		console.log(numerator);
+		console.log(denominator);
+		if ((numerator % i === 0) && (denominator % i === 0)) {
+			numerator = numerator/i;
+			denominator = denominator/i;
+			i = 1;
+			console.log(numerator);
+			console.log(denominator);
+		};
+	}
+	var numerator = numerator + (wholeNum * denominator);
+	return numerator.toString() + '/' + denominator.toString();
 };
 
 var matchOdds = function(team1, team2) {
