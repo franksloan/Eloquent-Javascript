@@ -52,6 +52,7 @@ var Form = function(won, drawn, lost, homeGames, awayGames, goalsFor, goalsAgain
 var aForm = new Form(3,4,1,6,7,8,7);
 var bForm = new Form(1,4,4,6,5);
 
+//called with players array (not players object);
 var Team = function(form, players, home) {
 	this.form = form;
 	this.players = sortPlayers(players);
@@ -60,14 +61,18 @@ var Team = function(form, players, home) {
 	var team = this;
 	//function to work out the rating for each player group
 	var positionRating = function(position) {
-		console.log(position);
 		var playerGroup = team.players[position];
+		console.log(playerGroup);
 		var rating = 0;
 		var average = 0;
 		var forOrAgainst = ((position === 'attackers') || (position === 'midfielders')) ? 'goalsFor' : 'goalsAgainst';
-		console.log(forOrAgainst);
-		var goalsPerGame = team.form[forOrAgainst]/
-			(team.form.homeGames + team.form.awayGames);
+		if ((position === 'attackers') || (position === 'midfielders')) {
+			//If attacking player - given a goal
+			var goalsPerGame = (team.form['goalsFor'] + 1)/(team.form.homeGames + team.form.awayGames);
+		} else {
+			//Fraction is upside down as goals conceded is bad
+			var goalsPerGame = (team.form.homeGames + team.form.awayGames)/(team.form['goalsAgainst'] + 1);
+		}
 		for(var player in playerGroup) {
 			rating += playerGroup[player].rating;
 		};
@@ -110,37 +115,14 @@ var decimalToFraction = function(input) {
 	var wholeNum = Math.floor(input);
 	var decimals = input - wholeNum;
 	var denominator = 1000;
-	var numerator = Math.floor(decimals * denominator);
-	for(var i = numerator + 1; i > 1; i--) {
-		console.log(i);
-		if ((numerator % i === 0) && (denominator % i === 0)) {
-			numerator = numerator/i;
-			denominator = denominator/i;
-			i = numerator;
-			console.log(numerator);
-			console.log(denominator);
-		};
-	}
-	var numerator = numerator + (wholeNum * denominator);
-	console.log(numerator.toString() + '/' + denominator.toString());
-};
-
-var decimalToFraction = function(input) {
-	var wholeNum = Math.floor(input);
-	var decimals = input - wholeNum;
-	var denominator = 1000;
 	//numerator as whole number
 	var numerator = Math.round(decimals * denominator);
+	// try and reduce the numerator and denominator by dividing by a common factor
 	for(var i = 2; i <= numerator; i++) {
-		console.log(i);
-		console.log(numerator);
-		console.log(denominator);
 		if ((numerator % i === 0) && (denominator % i === 0)) {
 			numerator = numerator/i;
 			denominator = denominator/i;
 			i = 1;
-			console.log(numerator);
-			console.log(denominator);
 		};
 	}
 	var numerator = numerator + (wholeNum * denominator);
@@ -156,6 +138,10 @@ var matchOdds = function(team1, team2) {
 	} else if (team1.home === team2.home) {
 		console.log('One team must be at home and one team must be away');
 	} else {
+		var attAdv1 = team1.attack + (0.5 * team1.midfield) - team2.defence - (1.2 * team2.goal);
+		var attAdv2 = team2.attack + (0.5 * team2.midfield) - team1.defence - (1.2 * team1.goal);
+		var midVsMid = team1.midfield / team2.midfield;
+		 
 		var formH2H = team1.form.formRating() / team2.form.formRating();
 	}
 	console.log(formH2H);
