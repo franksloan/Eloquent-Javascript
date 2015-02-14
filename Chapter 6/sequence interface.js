@@ -24,3 +24,20 @@ function logFive(sequence) {
 				
 	}	
 }
+
+function RangeSeq(from, to) {
+	this.from = from;
+	this.to = to;
+}
+
+RangeSeq.prototype.next = function() {
+	if(this.from <= this.to) {
+		return true;
+	}
+	return false;
+}
+
+RangeSeq.prototype.current = function() {
+	this.from++;
+	return this.from - 1;
+}

@@ -141,7 +141,12 @@ var matchOdds = function(team1, team2) {
 		var attAdv1 = team1.attack + (0.5 * team1.midfield) - team2.defence - (1.2 * team2.goal);
 		var attAdv2 = team2.attack + (0.5 * team2.midfield) - team1.defence - (1.2 * team1.goal);
 		var midVsMid = team1.midfield / team2.midfield;
-		 
+		//if a team's midfield is better than the others it can help attack
+		//this will increase advantage but if worse - midfield must defend
+		//this will worsen the attacking advantage
+		var playerTeam = (addAdv1 * midVsMid) - (attAdv2 / midVsMid);
+		//the form rating of each team may make the better side even stronger
+		//but if better team is not in form, the game may be more even
 		var formH2H = team1.form.formRating() / team2.form.formRating();
 	}
 	console.log(formH2H);
