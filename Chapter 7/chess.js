@@ -63,6 +63,7 @@ function Match(layout, legend){
       this.player1.setup(2);
       this.player2.setup(7);
       this.player2.setup(8);
+      this.playerTurn = this.player1;
 
       layout.forEach(function(line, y) {
             for (var x = 0; x < line.length; x++){
@@ -83,35 +84,49 @@ Match.prototype.toString = function() {
       return output;
 }
 Match.prototype.turn = function(from, to) {
-      var piece = this.chessboard.get(from);
-      console.log(piece);
-      var space = this.chessboard.get(to);
-      console.log(this.chessboard.isInside(new Vector(5,6)));
-      if(piece != null && this.chessboard.isInside(to)) {
-            if(piece.move(from, to, space)){
-                  this.chessboard.set(from, null);
-                  this.takeDestination(space);
-                  this.chessboard.set(to, piece);
-            };
+      var start = new Vector(from[0], from[1]);
+      var dest = new Vector(to[0], to[1]);
+      var startObj = this.chessboard.get(start);
+      var destObj = this.chessboard.get(dest);
+      
+      if(startObj != null) {
+            if(this.playerTurn.playersPiece(start)) {
+                  if(this.chessboard.isInside(dest)) {
+                        if(startObj.move(start, dest, destObj, this.player1.go)){
+                              console.log('moving');
+                              this.chessboard.set(start, null);
+                              this.takeDestination(dest, destObj);
+                              this.playerTurn.changePosition(start, dest, false);
+                              
+                              this.chessboard.set(dest, startObj);
+                              //Change player
+                              this.playerTurn = this.player1.go ? this.player2 : this.player1;
+                              this.player1.go = !this.player1.go;
+                              this.player2.go = !this.player2.go;
+                        } else {
+                              console.log("That's not a valid move for this piece");
+                        }
+                  } else {
+                        console.log("That position is not on the board");
+                  }
+            } else {
+                  console.log("It is not this players turn");
+            }
       } else {
             console.log("There is no piece in that position to move");
       }
-
-      player1.go = !player1.go;
-      player2.go = !player2.go;
+      this.toString();
 };
-Match.prototype.playersPiece = function(position, player) {
-      for (var i = 0; i < player.playerPositions; i++) {
-            if( position == player.playerPositions[i]){
-                  return true;
-            }
-      }
-      return false;
-}
 
-Match.prototype.takeDestination = function(space) {
-      if(space != null){
-            console.log(charFromElement(space) + " has been taken, hard luck!");
+
+Match.prototype.takeDestination = function(dest, destObj) {
+      if(destObj != null){
+            if (this.player1.go) {
+                  this.player2.changePosition(dest, null, true);
+            } else {
+                  this.player1.changePosition(dest, null, true)
+            }
+            console.log(charFromElement(destObj) + " has been taken, hard luck!");
       }
 }
 
@@ -121,9 +136,12 @@ function Edge(){
 function Pawn(){
       this.moves = [[0,1],[1,1],[-1,1]]
 }
-Pawn.prototype.move = function(from,to,space) {
-      var move = to.change(from); //move is vector of the change
-      if ( move.y === 1 && (move.x === 0 || (move.x === 1 && space != null))) {
+Pawn.prototype.move = function(start,dest,destObj, player1) {
+      console.log(start.x + ', ' + start.y + " d: " + dest.x + ', ' + dest.y);
+      var move = dest.change(start); //move is vector of the change
+      console.log('x: ' + move.x + ' y: ' + move.y);
+      var dir = player1 ? 1 : -1;
+      if ( ( move.y === dir) && (move.x === 0 || ((move.x === 1 || move.x === -1) && destObj != null))) {
             return true;
       } else {
             return false;
@@ -143,12 +161,24 @@ Player.prototype.setup = function(yPosition){
 }
 Player.prototype.playersPiece = function(position) {
       for (var i = 0; i < this.piecePositions.length; i++) {
-            console.log(position[0] + ' ' + this.piecePositions[i][0] + ' / ' + position[1] + ' ' + this.piecePositions[i][1])
-            if( position[0] == this.piecePositions[i][0] && position[1] == this.piecePositions[i][1]){
+            console.log(position.x + ' ' + this.piecePositions[i][0] + ' / ' + position.y + ' ' + this.piecePositions[i][1])
+            if( position.x == this.piecePositions[i][0] && position.y == this.piecePositions[i][1]){
                   return true;
             }
       }
       return false;
+}
+Player.prototype.changePosition = function(start, dest, taken) {
+      for (var i = 0; i < this.piecePositions.length; i++) {
+            if( start.x == this.piecePositions[i][0] && start.y == this.piecePositions[i][1]){
+                  if (taken) {
+                        this.piecePositions.splice(i,1);
+                  } else {
+                        this.piecePositions[i][0] = dest.x;
+                        this.piecePositions[i][1] = dest.y;
+                  }
+            }
+      }
 }
 
 
