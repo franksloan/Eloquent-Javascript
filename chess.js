@@ -1,12 +1,12 @@
 var board = ["----------",
-            "-PKPPPPKP-",
+            "-PPPPPPPP-",
             "-PPPPPPPP-",
             "-        -",
             "-        -",
             "-        -",
             "-        -",
             "-PPPPPPPP-",
-            "-PKPPPPKP-",
+            "-PPPPPPPP-",
             "----------"];
 
 function Vector(x,y) {
@@ -25,8 +25,8 @@ function Board(width, height) {
       this.space = new Array(width * height);
 }
 Board.prototype.isInside = function(vector) {
-      return vector.x > 0 && vector.x < this.width &&
-            vector.y > 0 && vector.y < this.height;
+      return vector.x >= 0 && vector.x < this.width &&
+            vector.y >= 0 && vector.y < this.height;
 }
 Board.prototype.get = function(vector) {
       return this.space[vector.x + this.width * vector.y];
@@ -88,26 +88,21 @@ Match.prototype.turn = function(from, to) {
       var dest = new Vector(to[0], to[1]);
       var startObj = this.chessboard.get(start);
       var destObj = this.chessboard.get(dest);
-      var self = this;
       
       if(startObj != null) {
             if(this.playerTurn.playersPiece(start)) {
                   if(this.chessboard.isInside(dest)) {
-                        if(startObj.move(start, dest, destObj, this.player1.go, self)){
-                              if(!this.playerTurn.playersPiece(dest)){
-                                    console.log('moving');
-                                    this.chessboard.set(start, null);
-                                    this.takeDestination(dest, destObj);
-                                    this.playerTurn.changePosition(start, dest, false);
-                                    
-                                    this.chessboard.set(dest, startObj);
-                                    //Change player
-                                    this.playerTurn = this.player1.go ? this.player2 : this.player1;
-                                    this.player1.go = !this.player1.go;
-                                    this.player2.go = !this.player2.go;
-                              } else {
-                                    console.log("Your own piece is there!");
-                              }
+                        if(startObj.move(start, dest, destObj, this.player1.go)){
+                              console.log('moving');
+                              this.chessboard.set(start, null);
+                              this.takeDestination(dest, destObj);
+                              this.playerTurn.changePosition(start, dest, false);
+                              
+                              this.chessboard.set(dest, startObj);
+                              //Change player
+                              this.playerTurn = this.player1.go ? this.player2 : this.player1;
+                              this.player1.go = !this.player1.go;
+                              this.player2.go = !this.player2.go;
                         } else {
                               console.log("That's not a valid move for this piece");
                         }
@@ -120,6 +115,7 @@ Match.prototype.turn = function(from, to) {
       } else {
             console.log("There is no piece in that position to move");
       }
+      this.toString();
 };
 
 
@@ -134,47 +130,23 @@ Match.prototype.takeDestination = function(dest, destObj) {
       }
 }
 
-//Start contains constructors for each type of piece
 function Edge(){
 
 }
 function Pawn(){
-      this.firstGo = true;
       this.moves = [[0,1],[1,1],[-1,1]]
 }
-Pawn.prototype.move = function(start,dest,destObj, player1, self) {
+Pawn.prototype.move = function(start,dest,destObj, player1) {
       console.log(start.x + ', ' + start.y + " d: " + dest.x + ', ' + dest.y);
       var move = dest.change(start); //move is vector of the change
       console.log('x: ' + move.x + ' y: ' + move.y);
       var dir = player1 ? 1 : -1;
-      var pieceInWay = self.chessboard.get(new Vector((start.x),(start.y + dir)));
-      if ( this.firstGo && (move.y === 2 * dir) && (move.x === 0) && !pieceInWay) {
-            this.firstGo = false;
-            return true
-      }
-      if ( ( move.y === dir) && ((move.x === 0 && destObj == null) || ((move.x === 1 || move.x === -1) && destObj != null))) {
+      if ( ( move.y === dir) && (move.x === 0 || ((move.x === 1 || move.x === -1) && destObj != null))) {
             return true;
       } else {
             return false;
       }
 }
-function Knight(){
-      //List of moves that a knight can make
-      this.validMoves = [[1,2],[1,-2],[2,1],[2,-1],[-1,2],[-1,-2],[-2,1],[-2,-1]];
-}
-Knight.prototype.move = function(start,dest) {
-      var move = dest.change(start);
-      for (var i = 0; i < this.validMoves.length; i++) {
-            if (move.x == this.validMoves[i][0] && move.y == this.validMoves[i][1]) {
-                  return true;
-            }
-      }
-      return false;
-}
-function Castle(){
-
-}
-//END - pieces section
 function Player(go) {
       this.go = go;
       this.piecePositions = [];
@@ -189,6 +161,7 @@ Player.prototype.setup = function(yPosition){
 }
 Player.prototype.playersPiece = function(position) {
       for (var i = 0; i < this.piecePositions.length; i++) {
+            console.log(position.x + ' ' + this.piecePositions[i][0] + ' / ' + position.y + ' ' + this.piecePositions[i][1])
             if( position.x == this.piecePositions[i][0] && position.y == this.piecePositions[i][1]){
                   return true;
             }
@@ -209,4 +182,4 @@ Player.prototype.changePosition = function(start, dest, taken) {
 }
 
 
-var match = new Match(board, {"-": Edge, "P": Pawn, "K": Knight});
+var match = new Match(board, {"-": Edge, "P": Pawn});
