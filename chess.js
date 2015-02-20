@@ -1,12 +1,12 @@
 var board = ["----------",
-            "-PKPPPPKP-",
+            "-CKBPPBKC-",
             "-PPPPPPPP-",
             "-        -",
             "-        -",
             "-        -",
             "-        -",
             "-PPPPPPPP-",
-            "-PKPPPPKP-",
+            "-CKBPPBKC-",
             "----------"];
 
 function Vector(x,y) {
@@ -25,8 +25,8 @@ function Board(width, height) {
       this.space = new Array(width * height);
 }
 Board.prototype.isInside = function(vector) {
-      return vector.x > 0 && vector.x < this.width &&
-            vector.y > 0 && vector.y < this.height;
+      return vector.x > 0 && vector.x < this.width - 1 &&
+            vector.y > 0 && vector.y < this.height - 1;
 }
 Board.prototype.get = function(vector) {
       return this.space[vector.x + this.width * vector.y];
@@ -93,7 +93,7 @@ Match.prototype.turn = function(from, to) {
       if(startObj != null) {
             if(this.playerTurn.playersPiece(start)) {
                   if(this.chessboard.isInside(dest)) {
-                        if(startObj.move(start, dest, destObj, this.player1.go, self)){
+                        if(startObj.move(start, dest, self, destObj, this.player1.go)){
                               if(!this.playerTurn.playersPiece(dest)){
                                     console.log('moving');
                                     this.chessboard.set(start, null);
@@ -142,7 +142,7 @@ function Pawn(){
       this.firstGo = true;
       this.moves = [[0,1],[1,1],[-1,1]]
 }
-Pawn.prototype.move = function(start,dest,destObj, player1, self) {
+Pawn.prototype.move = function(start,dest,self,destObj, player1) {
       console.log(start.x + ', ' + start.y + " d: " + dest.x + ', ' + dest.y);
       var move = dest.change(start); //move is vector of the change
       console.log('x: ' + move.x + ' y: ' + move.y);
@@ -172,6 +172,78 @@ Knight.prototype.move = function(start,dest) {
       return false;
 }
 function Castle(){
+
+}
+Castle.prototype.move = function(start, dest, self) {
+      var move = dest.change(start);
+      if ((move.x != 0 && move.y == 0)) {
+            for (var i = start.x + 1; i < dest.x; i++) {
+                  var pieceInWay = self.chessboard.get(new Vector(i,start.y));
+                  if (pieceInWay != null) {
+                        return false;
+                  }
+            }
+            for (var i = start.x - 1; i > dest.x; i--) {
+                  var pieceInWay = self.chessboard.get(new Vector(i,start.y));
+                  if (pieceInWay != null) {
+                        return false;
+                  }
+            }
+            return true;
+      }
+      if ((move.x == 0 && move.y != 0)) {
+            for (var i = start.y + 1; i < dest.y; i++) {
+                  var pieceInWay = self.chessboard.get(new Vector(start.x,i));
+                  if (pieceInWay != null) {
+                        return false;
+                  }
+            }
+            for (var i = start.y - 1; i > dest.y; i--) {
+                  var pieceInWay = self.chessboard.get(new Vector(start.x,i));
+                  if (pieceInWay != null) {
+                        return false;
+                  }
+            }
+            return true;
+      }
+}
+function Bishop() {
+
+}
+Bishop.prototype.move = function(start, dest, self) {
+      var move = dest.change(start);
+      if (move.x / move.y == 1) {
+            var i, j;
+            for(i = start.x + 1, j = start.y + 1; i < dest.x; i++, j++) {
+                  var pieceInWay = self.chessboard.get(new Vector(i,j));
+                  if (pieceInWay != null) {
+                        return false;
+                  }
+            }
+            for(i = start.x - 1, j = start.y - 1; i > dest.x; i--, j--) {
+                  var pieceInWay = self.chessboard.get(new Vector(i,j));
+                  if (pieceInWay != null) {
+                        return false;
+                  }
+            }
+            return true;
+      }
+      if (move.x / move.y == -1) {
+            var i,j;
+            for(i = start.x + 1, j = start.y - 1; i < dest.x; i++, j--) {
+                  var pieceInWay = self.chessboard.get(new Vector(i,j));
+                  if (pieceInWay != null) {
+                        return false;
+                  }
+            }
+            for(i = start.x - 1, j = start.y + 1; i > dest.x; i--, j++) {
+                  var pieceInWay = self.chessboard.get(new Vector(i,j));
+                  if (pieceInWay != null) {
+                        return false;
+                  }
+            }
+            return true;
+      }
 
 }
 //END - pieces section
@@ -209,4 +281,7 @@ Player.prototype.changePosition = function(start, dest, taken) {
 }
 
 
-var match = new Match(board, {"-": Edge, "P": Pawn, "K": Knight});
+var match = new Match(board, {"-": Edge, "P": Pawn, "K": Knight, "C": Castle, "B": Bishop});
+match.turn([4,2],[4,4]);
+match.turn([6,7],[6,5]);
+match.toString();
