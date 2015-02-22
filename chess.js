@@ -1,5 +1,5 @@
 var board = ["----------",
-            "-CHBKQBHC-",
+            "-CHBQKBHC-",
             "-PPPPPPPP-",
             "-        -",
             "-        -",
@@ -57,7 +57,7 @@ function Match(layout, legend){
       var chessboard = new Board(layout[0].length, layout.length)
       this.chessboard = chessboard;
       this.legend = legend;
-      this.player1 = new Player(true, new Vector(4,1));
+      this.player1 = new Player(true, new Vector(5,1));
       this.player2 = new Player(false, new Vector(5,8));
       this.player1.setup(1);
       this.player1.setup(2);
@@ -84,6 +84,60 @@ Match.prototype.toString = function() {
       }
       return output;
 }
+Match.prototype.moveOutOfCheck = function(start,dest,startObj,destObj,self) {
+      var stillInCheck = false;
+      if(this.playerTurn.check){
+            for ( var i = 0; i < this.otherPlayer.piecePositions.length; i++) {
+                  var checkStart = this.otherPlayer.piecePositions[i];
+                  var checkObj = this.chessboard.get(checkStart);
+                  if(checkObj.move(checkStart, this.playerTurn.kingPosition, self)){
+                        this.chessboard.set(start, startObj);
+                        this.chessboard.set(dest, destObj);
+                        this.playerTurn.changePosition(dest,start);
+                        if(destObj != null){
+                              this.otherPlayer.changePosition(null, dest);
+                        }
+                        stillInCheck = true;
+                        return stillInCheck;
+                  }
+            }     
+      }
+      return stillInCheck;
+}
+Match.prototype.putOpponentInCheck = function(self) {
+      for ( var i = 0; i < this.playerTurn.piecePositions.length; i++) {
+            var checkStart = this.playerTurn.piecePositions[i];
+            var checkObj = this.chessboard.get(checkStart);
+            if(checkObj.move(checkStart,this.otherPlayer.kingPosition,self)){
+                  this.otherPlayer.check = true;
+                  console.log('CHECK');
+            }
+      }
+}
+Match.prototype.changePlayer = function() {
+      this.playerTurn = this.player1.go ? this.player2 : this.player1;
+      this.otherPlayer = this.player2.go ? this.player2 : this.player1;
+      this.player1.go = !this.player1.go;
+      this.player2.go = !this.player2.go;
+}
+Match.prototype.startMove = function(start,dest,startObj,destObj,self) {
+      console.log('moving');
+      this.chessboard.set(start, null);
+      //is there an opposing player's piece there
+      this.takeDestination(dest, destObj);
+      this.playerTurn.changePosition(start, dest, false);
+      //put piece in destination
+      this.chessboard.set(dest, startObj);
+      //is player in check - if so need to revert
+      if(this.moveOutOfCheck(start,dest,startObj,destObj,self)) {
+            console.log('You need to move out of CHECK');
+            return;
+      }
+      //have we put opposing king in check
+      this.putOpponentInCheck(self);
+      //Change player
+      this.changePlayer();
+}
 Match.prototype.turn = function(from, to) {
       var start = new Vector(from[0], from[1]);
       var dest = new Vector(to[0], to[1]);
@@ -101,27 +155,7 @@ Match.prototype.turn = function(from, to) {
                         if(startObj.move(start, dest, self, destObj, this.player1.go)){
                               //finally if player's own piece is not in destination, player can move
                               if(!this.playerTurn.playersPiece(dest)){
-                                    console.log('moving');
-                                    this.chessboard.set(start, null);
-                                    //is there an opposing player's piece there
-                                    this.takeDestination(dest, destObj);
-                                    this.playerTurn.changePosition(start, dest, false);
-                                    //put piece in destination
-                                    this.chessboard.set(dest, startObj);
-                                    //have we put opposing king in check
-                                    for ( var i = 0; i < this.playerTurn.piecePositions; i++) {
-                                          var pos
-                                          if(this.playerTurn.piecePositions[0])
-                                    }
-                                    if(startObj.move(dest, this.otherPlayer.kingPosition, self)) {
-                                          this.otherPlayer.check.push([dest.x],[dest.y]);
-                                          console.log('CHECK');
-                                    }
-                                    //Change player
-                                    this.playerTurn = this.player1.go ? this.player2 : this.player1;
-                                    this.otherPlayer = this.player2.go ? this.player2 : this.player1;
-                                    this.player1.go = !this.player1.go;
-                                    this.player2.go = !this.player2.go;
+                                    this.startMove(start,dest,startObj,destObj,self);
                               } else {
                                     console.log("Your own piece is there!");
                               }
@@ -151,14 +185,14 @@ Match.prototype.takeDestination = function(dest, destObj) {
       }
 }
 
-//Start contains constructors for each type of piece
+//Pieces - contains constructors for each type of piece
 function Edge(){
 
 }
 function Pawn(){
       this.firstGo = true;
 }
-Pawn.prototype.move = function(start,dest,self,destObj, player1) {
+Pawn.prototype.move = function(start, dest, self, destObj, player1) {
       var move = dest.change(start); //move is vector of the change
       var dir = player1 ? 1 : -1; //which way the player is going
       var pieceInWay = self.chessboard.get(new Vector((start.x),(start.y + dir)));
@@ -187,72 +221,122 @@ Piece.prototype.validMove = function(start,dest) {
 }
 Piece.prototype.squareMove = function(start,dest,self){
       var move = dest.change(start);
-      if ((move.x != 0 && move.y == 0)) {
-            for (var i = start.x + 1; i < dest.x; i++) {
-                  var pieceInWay = self.chessboard.get(new Vector(i,start.y));
+      var i;
+      function square(set_i, end, x, y) {
+            console.log(set_i + ', ' + end + ', ' + x + ', ' + y);
+            for (set_i; i < end; i++) {
+                  console.log('in');
+                  var pieceInWay = self.chessboard.get(new Vector(x,y));
                   if (pieceInWay != null) {
-                        return false;
-                  }
-            }
-            for (var i = start.x - 1; i > dest.x; i--) {
-                  var pieceInWay = self.chessboard.get(new Vector(i,start.y));
-                  if (pieceInWay != null) {
+                        console.log(pieceInWay);
                         return false;
                   }
             }
             return true;
       }
+      if ((move.x != 0 && move.y == 0)) {
+            if(square(i = start.x + 1, dest.x, i, start.y) &&
+                  square(i = dest.x + 1, start.x, i, start.y)) {
+                  return true;
+            } else {
+                  return false;
+            }
+
+            // for (var i = start.x + 1; i < dest.x; i++) {
+            //       var pieceInWay = self.chessboard.get(new Vector(i,start.y));
+            //       if (pieceInWay != null) {
+            //             return false;
+            //       }
+            // }
+            // for (var i = start.x - 1; i > dest.x; i--) {
+            //       var pieceInWay = self.chessboard.get(new Vector(i,start.y));
+            //       if (pieceInWay != null) {
+            //             return false;
+            //       }
+            // }
+            // return true;
+      }
       if ((move.x == 0 && move.y != 0)) {
-            for (var i = start.y + 1; i < dest.y; i++) {
-                  var pieceInWay = self.chessboard.get(new Vector(start.x,i));
-                  if (pieceInWay != null) {
-                        return false;
-                  }
+            if(square(i = start.y + 1, dest.y, start.x, i) &&
+                  square(i = dest.y + 1, start.y, start.x, i)) {
+                  return true;
+            } else {
+                  return false;
             }
-            for (var i = start.y - 1; i > dest.y; i--) {
-                  var pieceInWay = self.chessboard.get(new Vector(start.x,i));
-                  if (pieceInWay != null) {
-                        return false;
-                  }
-            }
-            return true;
+            // for (var i = start.y + 1; i < dest.y; i++) {
+            //       var pieceInWay = self.chessboard.get(new Vector(start.x,i));
+            //       if (pieceInWay != null) {
+            //             return false;
+            //       }
+            // }
+            // for (var i = start.y - 1; i > dest.y; i--) {
+            //       var pieceInWay = self.chessboard.get(new Vector(start.x,i));
+            //       if (pieceInWay != null) {
+            //             return false;
+            //       }
+            // }
+            // return true;
       }
 }
 Piece.prototype.diagonalMove = function(start,dest,self) {
       var move = dest.change(start);
       var i, j;
-      //top left - bottom right
-      if (move.x / move.y == 1) {
-            for(i = start.x + 1, j = start.y + 1; i < dest.x; i++, j++) {
-                  var pieceInWay = self.chessboard.get(new Vector(i,j));
+      function diag(set_i, set_j, end, x, y) {
+            for(set_i, set_j; i < end; i++, j++) {
+                  var pieceInWay = self.chessboard.get(new Vector(x,y));
                   if (pieceInWay != null) {
-                        return false;
-                  }
-            }
-            for(i = start.x - 1, j = start.y - 1; i > dest.x; i--, j--) {
-                  var pieceInWay = self.chessboard.get(new Vector(i,j));
-                  if (pieceInWay != null) {
+                        console.log(pieceInWay);
                         return false;
                   }
             }
             return true;
+      }
+      //top left - bottom right
+      if (move.x / move.y == 1) {
+            if(diag(i = start.x + 1, j = start.y + 1, dest.x, i, j) &&
+            diag(i = dest.x + 1, j = dest.y + 1, start.x, i, j)) {
+                  return true;
+            } else {
+                  return false;
+            }
+            // for(i = start.x + 1, j = start.y + 1; i < dest.x; i++, j++) {
+            //       var pieceInWay = self.chessboard.get(new Vector(i,j));
+            //       if (pieceInWay != null) {
+            //             return false;
+            //       }
+            // }
+            // for(i = start.x - 1, j = start.y - 1; i > dest.x; i--, j--) {
+            //       var pieceInWay = self.chessboard.get(new Vector(i,j));
+            //       if (pieceInWay != null) {
+            //             return false;
+            //       }
+            // }
+            // return true;
       }
       //top right - bottom left
       if (move.x / move.y == -1) {
-            for(i = start.x + 1, j = start.y - 1; i < dest.x; i++, j--) {
-                  var pieceInWay = self.chessboard.get(new Vector(i,j));
-                  if (pieceInWay != null) {
-                        return false;
-                  }
+            if(diag(i = start.x + 1, j = -(start.y - 1), dest.x, i, -j) &&
+            diag(i = -(start.x - 1), j = start.y + 1, dest.y, -i, j)) {
+                  return true;
+            } else {
+                  return false;
             }
-            for(i = start.x - 1, j = start.y + 1; i > dest.x; i--, j++) {
-                  var pieceInWay = self.chessboard.get(new Vector(i,j));
-                  if (pieceInWay != null) {
-                        return false;
-                  }
-            }
-            return true;
       }
+      // if (move.x / move.y == -1) {
+      //       for(i = start.x + 1, j = start.y - 1; i < dest.x; i++, j--) {
+      //             var pieceInWay = self.chessboard.get(new Vector(i,j));
+      //             if (pieceInWay != null) {
+      //                   return false;
+      //             }
+      //       }
+      //       for(i = start.x - 1, j = start.y + 1; i > dest.x; i--, j++) {
+      //             var pieceInWay = self.chessboard.get(new Vector(i,j));
+      //             if (pieceInWay != null) {
+      //                   return false;
+      //             }
+      //       }
+      //       return true;
+      // }
 }
 function Knight(){
       //List of moves that a knight can make
@@ -300,19 +384,17 @@ function Player(go, king) {
       this.piecePositions = [];
       this.kingPosition = king;
       //list of positions that the king is in check from
-      this.check = [];
+      this.check = false;
 }
 Player.prototype.setup = function(yPosition){
       for (var i = 1; i <= 8; i++) {
-            var newPosition = [];
-            newPosition.push(i);
-            newPosition.push(yPosition);
+            var newPosition = new Vector(i, yPosition);
             this.piecePositions.push(newPosition);
       }
 }
 Player.prototype.playersPiece = function(position) {
       for (var i = 0; i < this.piecePositions.length; i++) {
-            if( position.x == this.piecePositions[i][0] && position.y == this.piecePositions[i][1]){
+            if( position.x == this.piecePositions[i].x && position.y == this.piecePositions[i].y){
                   return true;
             }
       }
@@ -320,12 +402,14 @@ Player.prototype.playersPiece = function(position) {
 }
 Player.prototype.changePosition = function(start, dest, taken) {
       for (var i = 0; i < this.piecePositions.length; i++) {
-            if( start.x == this.piecePositions[i][0] && start.y == this.piecePositions[i][1]){
-                  if (taken) {
+            if( start == null || (start.x == this.piecePositions[i].x && start.y == this.piecePositions[i].y)){
+                  if (taken || start != null) {
                         this.piecePositions.splice(i,1);
-                  } else {
-                        this.piecePositions[i][0] = dest.x;
-                        this.piecePositions[i][1] = dest.y;
+                  }
+                  if (!taken) {
+                        //add end position
+                        this.piecePositions.push(new Vector(dest.x, dest.y));
+                        return         
                   }
             }
       }
@@ -334,6 +418,6 @@ Player.prototype.changePosition = function(start, dest, taken) {
 
 var match = new Match(board, {"-": Edge, "P": Pawn, "H": Knight, "C": Castle, "B": Bishop,
                               "Q": Queen, "K": King});
-match.turn([4,2],[4,4]);
+match.turn([5,2],[5,4]);
 match.turn([6,7],[6,5]);
 match.toString();
