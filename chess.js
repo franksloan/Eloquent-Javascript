@@ -1,12 +1,12 @@
 var board = ["----------",
-            "-CKBPPBKC-",
+            "-CHBKQBHC-",
             "-PPPPPPPP-",
             "-        -",
             "-        -",
             "-        -",
             "-        -",
             "-PPPPPPPP-",
-            "-CKBPPBKC-",
+            "-CHBQKBHC-",
             "----------"];
 
 function Vector(x,y) {
@@ -57,13 +57,14 @@ function Match(layout, legend){
       var chessboard = new Board(layout[0].length, layout.length)
       this.chessboard = chessboard;
       this.legend = legend;
-      this.player1 = new Player(true);
-      this.player2 = new Player(false);
+      this.player1 = new Player(true, new Vector(4,1));
+      this.player2 = new Player(false, new Vector(5,8));
       this.player1.setup(1);
       this.player1.setup(2);
       this.player2.setup(7);
       this.player2.setup(8);
       this.playerTurn = this.player1;
+      this.otherPlayer = this.player2;
 
       layout.forEach(function(line, y) {
             for (var x = 0; x < line.length; x++){
@@ -89,20 +90,36 @@ Match.prototype.turn = function(from, to) {
       var startObj = this.chessboard.get(start);
       var destObj = this.chessboard.get(dest);
       var self = this;
-      
+
+      //is there a piece to move
       if(startObj != null) {
+            //is it this player's piece
             if(this.playerTurn.playersPiece(start)) {
+                  //is destination on the board
                   if(this.chessboard.isInside(dest)) {
+                        //check that the move is valid for this type of piece
                         if(startObj.move(start, dest, self, destObj, this.player1.go)){
+                              //finally if player's own piece is not in destination, player can move
                               if(!this.playerTurn.playersPiece(dest)){
                                     console.log('moving');
                                     this.chessboard.set(start, null);
+                                    //is there an opposing player's piece there
                                     this.takeDestination(dest, destObj);
                                     this.playerTurn.changePosition(start, dest, false);
-                                    
+                                    //put piece in destination
                                     this.chessboard.set(dest, startObj);
+                                    //have we put opposing king in check
+                                    for ( var i = 0; i < this.playerTurn.piecePositions; i++) {
+                                          var pos
+                                          if(this.playerTurn.piecePositions[0])
+                                    }
+                                    if(startObj.move(dest, this.otherPlayer.kingPosition, self)) {
+                                          this.otherPlayer.check.push([dest.x],[dest.y]);
+                                          console.log('CHECK');
+                                    }
                                     //Change player
                                     this.playerTurn = this.player1.go ? this.player2 : this.player1;
+                                    this.otherPlayer = this.player2.go ? this.player2 : this.player1;
                                     this.player1.go = !this.player1.go;
                                     this.player2.go = !this.player2.go;
                               } else {
@@ -140,14 +157,12 @@ function Edge(){
 }
 function Pawn(){
       this.firstGo = true;
-      this.moves = [[0,1],[1,1],[-1,1]]
 }
 Pawn.prototype.move = function(start,dest,self,destObj, player1) {
-      console.log(start.x + ', ' + start.y + " d: " + dest.x + ', ' + dest.y);
       var move = dest.change(start); //move is vector of the change
-      console.log('x: ' + move.x + ' y: ' + move.y);
-      var dir = player1 ? 1 : -1;
+      var dir = player1 ? 1 : -1; //which way the player is going
       var pieceInWay = self.chessboard.get(new Vector((start.x),(start.y + dir)));
+      //if it's a pawn's first move it can move two spaces in y direction
       if ( this.firstGo && (move.y === 2 * dir) && (move.x === 0) && !pieceInWay) {
             this.firstGo = false;
             return true
@@ -158,23 +173,19 @@ Pawn.prototype.move = function(start,dest,self,destObj, player1) {
             return false;
       }
 }
-function Knight(){
-      //List of moves that a knight can make
-      this.validMoves = [[1,2],[1,-2],[2,1],[2,-1],[-1,2],[-1,-2],[-2,1],[-2,-1]];
+function Piece() {
+
 }
-Knight.prototype.move = function(start,dest) {
+Piece.prototype.validMove = function(start,dest) {
       var move = dest.change(start);
       for (var i = 0; i < this.validMoves.length; i++) {
             if (move.x == this.validMoves[i][0] && move.y == this.validMoves[i][1]) {
                   return true;
             }
       }
-      return false;
+      return false;      
 }
-function Castle(){
-
-}
-Castle.prototype.move = function(start, dest, self) {
+Piece.prototype.squareMove = function(start,dest,self){
       var move = dest.change(start);
       if ((move.x != 0 && move.y == 0)) {
             for (var i = start.x + 1; i < dest.x; i++) {
@@ -207,13 +218,11 @@ Castle.prototype.move = function(start, dest, self) {
             return true;
       }
 }
-function Bishop() {
-
-}
-Bishop.prototype.move = function(start, dest, self) {
+Piece.prototype.diagonalMove = function(start,dest,self) {
       var move = dest.change(start);
+      var i, j;
+      //top left - bottom right
       if (move.x / move.y == 1) {
-            var i, j;
             for(i = start.x + 1, j = start.y + 1; i < dest.x; i++, j++) {
                   var pieceInWay = self.chessboard.get(new Vector(i,j));
                   if (pieceInWay != null) {
@@ -228,8 +237,8 @@ Bishop.prototype.move = function(start, dest, self) {
             }
             return true;
       }
+      //top right - bottom left
       if (move.x / move.y == -1) {
-            var i,j;
             for(i = start.x + 1, j = start.y - 1; i < dest.x; i++, j--) {
                   var pieceInWay = self.chessboard.get(new Vector(i,j));
                   if (pieceInWay != null) {
@@ -244,12 +253,54 @@ Bishop.prototype.move = function(start, dest, self) {
             }
             return true;
       }
+}
+function Knight(){
+      //List of moves that a knight can make
+      this.validMoves = [[1,2],[1,-2],[2,1],[2,-1],[-1,2],[-1,-2],[-2,1],[-2,-1]];
+}
+Knight.prototype = new Piece();
+Knight.prototype.move = function(start,dest) {
+      return this.validMove(start,dest);
+}
+function Castle(){
 
 }
+Castle.prototype = new Piece();
+Castle.prototype.move = function(start, dest, self) {
+      return this.squareMove(start, dest, self);
+}
+function Bishop() {
+
+}
+Bishop.prototype = new Piece();
+Bishop.prototype.move = function(start, dest, self) {
+      return this.diagonalMove(start, dest, self);
+}
+function King() {
+      this.validMoves = [[1,1],[1,0],[1,-1],[0,1],[0,-1],[-1,1],[-1,0],[-1,-1]];
+}
+King.prototype = new Piece();
+King.prototype.move = function(start, dest) {
+      return this.validMove(start,dest);
+}
+function Queen() {
+
+}
+Queen.prototype = new Piece();
+Queen.prototype.move = function(start,dest,self) {
+      if(!this.squareMove(start,dest,self)){
+            return this.diagonalMove(start,dest,self);
+      } else {
+            return true;
+      }
+}
 //END - pieces section
-function Player(go) {
+function Player(go, king) {
       this.go = go;
       this.piecePositions = [];
+      this.kingPosition = king;
+      //list of positions that the king is in check from
+      this.check = [];
 }
 Player.prototype.setup = function(yPosition){
       for (var i = 1; i <= 8; i++) {
@@ -281,7 +332,8 @@ Player.prototype.changePosition = function(start, dest, taken) {
 }
 
 
-var match = new Match(board, {"-": Edge, "P": Pawn, "K": Knight, "C": Castle, "B": Bishop});
+var match = new Match(board, {"-": Edge, "P": Pawn, "H": Knight, "C": Castle, "B": Bishop,
+                              "Q": Queen, "K": King});
 match.turn([4,2],[4,4]);
 match.turn([6,7],[6,5]);
 match.toString();
