@@ -1,3 +1,5 @@
+//[EDIT: I have since found that javascript accepts a number such as +.5]
+
 //This is actually not strictly correct as it accepts '+' followed by '.'
 var number = /^(\+|-)?(\d+(\.\d*)?|\.\d+)(e(\+|-)?\d+)?$/i;
 // Tests:
