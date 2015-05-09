@@ -229,11 +229,9 @@ Piece.prototype.squareMove = function(start,dest,self){
       var move = dest.change(start);
       var i;
       function square(set_i, end, x, y) {
-            console.log(set_i + ', ' + end + ', ' + x + ', ' + y);
             for (set_i; i < end; i++) {
                   var pieceInWay = self.chessboard.get(new Vector(x,y));
                   if (pieceInWay != null) {
-                        console.log(pieceInWay);
                         return false;
                   }
             }
@@ -263,7 +261,6 @@ Piece.prototype.diagonalMove = function(start,dest,self) {
             for(set_i, set_j; i < end; i++, j++) {
                   var pieceInWay = self.chessboard.get(new Vector(x,y));
                   if (pieceInWay != null) {
-                        console.log(pieceInWay);
                         return false;
                   }
             }
