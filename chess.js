@@ -225,7 +225,6 @@ Piece.prototype.squareMove = function(start,dest,self){
       function square(set_i, end, x, y) {
             console.log(set_i + ', ' + end + ', ' + x + ', ' + y);
             for (set_i; i < end; i++) {
-                  console.log('in');
                   var pieceInWay = self.chessboard.get(new Vector(x,y));
                   if (pieceInWay != null) {
                         console.log(pieceInWay);
@@ -241,20 +240,6 @@ Piece.prototype.squareMove = function(start,dest,self){
             } else {
                   return false;
             }
-
-            // for (var i = start.x + 1; i < dest.x; i++) {
-            //       var pieceInWay = self.chessboard.get(new Vector(i,start.y));
-            //       if (pieceInWay != null) {
-            //             return false;
-            //       }
-            // }
-            // for (var i = start.x - 1; i > dest.x; i--) {
-            //       var pieceInWay = self.chessboard.get(new Vector(i,start.y));
-            //       if (pieceInWay != null) {
-            //             return false;
-            //       }
-            // }
-            // return true;
       }
       if ((move.x == 0 && move.y != 0)) {
             if(square(i = start.y + 1, dest.y, start.x, i) &&
@@ -263,19 +248,6 @@ Piece.prototype.squareMove = function(start,dest,self){
             } else {
                   return false;
             }
-            // for (var i = start.y + 1; i < dest.y; i++) {
-            //       var pieceInWay = self.chessboard.get(new Vector(start.x,i));
-            //       if (pieceInWay != null) {
-            //             return false;
-            //       }
-            // }
-            // for (var i = start.y - 1; i > dest.y; i--) {
-            //       var pieceInWay = self.chessboard.get(new Vector(start.x,i));
-            //       if (pieceInWay != null) {
-            //             return false;
-            //       }
-            // }
-            // return true;
       }
 }
 Piece.prototype.diagonalMove = function(start,dest,self) {
@@ -299,19 +271,6 @@ Piece.prototype.diagonalMove = function(start,dest,self) {
             } else {
                   return false;
             }
-            // for(i = start.x + 1, j = start.y + 1; i < dest.x; i++, j++) {
-            //       var pieceInWay = self.chessboard.get(new Vector(i,j));
-            //       if (pieceInWay != null) {
-            //             return false;
-            //       }
-            // }
-            // for(i = start.x - 1, j = start.y - 1; i > dest.x; i--, j--) {
-            //       var pieceInWay = self.chessboard.get(new Vector(i,j));
-            //       if (pieceInWay != null) {
-            //             return false;
-            //       }
-            // }
-            // return true;
       }
       //top right - bottom left
       if (move.x / move.y == -1) {
@@ -322,21 +281,6 @@ Piece.prototype.diagonalMove = function(start,dest,self) {
                   return false;
             }
       }
-      // if (move.x / move.y == -1) {
-      //       for(i = start.x + 1, j = start.y - 1; i < dest.x; i++, j--) {
-      //             var pieceInWay = self.chessboard.get(new Vector(i,j));
-      //             if (pieceInWay != null) {
-      //                   return false;
-      //             }
-      //       }
-      //       for(i = start.x - 1, j = start.y + 1; i > dest.x; i--, j++) {
-      //             var pieceInWay = self.chessboard.get(new Vector(i,j));
-      //             if (pieceInWay != null) {
-      //                   return false;
-      //             }
-      //       }
-      //       return true;
-      // }
 }
 function Knight(){
       //List of moves that a knight can make
