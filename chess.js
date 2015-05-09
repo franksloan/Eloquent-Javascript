@@ -368,6 +368,4 @@ Player.prototype.changePosition = function(start, dest, taken) {
 
 var match = new Match(board, {"-": Edge, "P": Pawn, "H": Knight, "C": Castle, "B": Bishop,
                               "Q": Queen, "K": King});
-match.turn([5,2],[5,4]);
-match.turn([6,7],[6,5]);
 match.toString();
