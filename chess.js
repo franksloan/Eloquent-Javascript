@@ -1,3 +1,9 @@
+//To play in the console, copy and paste the code across.
+//To make a move use match.turn([x1,y1],[x2,y2]) with
+//the first array being the start position and the second being
+//the destination.
+//To view the current setup of the board use match.toString()
+
 var board = ["----------",
             "-CHBQKBHC-",
             "-PPPPPPPP-",
