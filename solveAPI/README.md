@@ -3,5 +3,5 @@
 ##### Install http dependency
 	npm install http
 
-##### Start maps app
+##### Run app
 	node solveMamon.js
