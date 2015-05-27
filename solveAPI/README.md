@@ -1,7 +1,7 @@
-# API Challenge solver
+#### API Challenge solver
 
-#### Install http dependency
+##### Install http dependency
 	npm install http
 
-#### Start maps app
+##### Start maps app
 	node solveMamon.js
