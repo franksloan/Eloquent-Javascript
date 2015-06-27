@@ -8,7 +8,7 @@ var arsenalPlayers = [{position: 'G', rating: 7},
 						{position: 'M', rating: 6},
 						{position: 'M', rating: 8},
 						{position: 'A', rating: 9},
-						{position: 'A', rating: 8}		
+						{position: 'A', rating: 2}		
 					];
 var arsenal = {};
 
